@@ -1,0 +1,100 @@
+# COMPLETE DOCKER CONFIGURATION
+# =============================
+# Backend, Frontend, MongoDB, All Services
+
+version: '3.8'
+
+services:
+  # ==================== MONGODB ====================
+  mongodb:
+    image: mongo:5.0
+    container_name: creatorhub_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - creatorhub_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== BACKEND ====================
+  backend:
+    container_name: creatorhub_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/youtube-creator-platform
+      - JWT_SECRET=your_jwt_secret_key
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - EMAIL_USER=${EMAIL_USER:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - ADMIN_EMAIL=admin@creatorhub.com
+      - ADMIN_PASSWORD=Admin@123456
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - creatorhub_network
+    volumes:
+      - ./backend:/app/backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== FRONTEND ====================
+  frontend:
+    container_name: creatorhub_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000/api
+    depends_on:
+      - backend
+    networks:
+      - creatorhub_network
+    volumes:
+      - ./frontend:/app
+
+  # ==================== ADMIN PANEL ====================
+  admin:
+    container_name: creatorhub_admin
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:5000/api
+      - REACT_APP_ADMIN_EMAIL=admin@creatorhub.com
+      - REACT_APP_ADMIN_PASSWORD=Admin@123456
+    depends_on:
+      - backend
+    networks:
+      - creatorhub_network
+
+# ==================== VOLUMES ====================
+volumes:
+  mongo_data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  creatorhub_network:
+    driver: bridge
