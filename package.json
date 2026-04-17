@@ -1,0 +1,26 @@
+{
+  "name": "creatorhub-backend",
+  "version": "1.0.0",
+  "description": "CreatorHub - YouTube Creator Platform",
+  "main": "BACKEND_COMPLETE.js",
+  "scripts": {
+    "start": "node BACKEND_COMPLETE.js",
+    "dev": "nodemon BACKEND_COMPLETE.js"
+  },
+  "keywords": ["youtube", "creator", "otp", "gmail"],
+  "author": "CreatorHub",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "nodemailer": "^6.9.1",
+    "axios": "^1.4.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
